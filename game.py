@@ -23,7 +23,14 @@ class NPuzzleState:
         return True
 
     def __str__(self):
-        return pformat(self.matrix, indent=2, width=20)
+        string = ''
+        
+        string += '[\n'
+        for row in self.matrix:
+            string += ' ' + str(row) + '\n'
+        string += ']'
+        
+        return string
 
     def __hash__(self):
         return hash(tuple(item for row in self.matrix for item in row))

@@ -7,14 +7,14 @@ bidirectional_astar = BidirectionalAStarSearch(NPuzzleState.manhattan_distance)
 
 size = 600
 
-movement_time = 100
+movement_time = 120
 movement_frames = 10
 
-interval_time = 50
+interval_time = 100
 
 def draw(steps: list[NPuzzleState]):
     root = Tk()
-    root.title("Game")
+    root.title("N Puzzle")
 
     canvas = Canvas(root, width=size, height=size, background='#ddd')
     canvas.pack()
@@ -64,14 +64,11 @@ def draw(steps: list[NPuzzleState]):
         if step == len(steps) - 1:
             return
         
-        curr = steps[step]
-        next = steps[step + 1]
-        
-        i0 = next.i
-        j0 = next.j
+        i0 = steps[step + 1].i
+        j0 = steps[step + 1].j
 
-        i1 = curr.i
-        j1 = curr.j
+        i1 = steps[step].i
+        j1 = steps[step].j
 
         rectangle_delta = [
             (rectangles_pos[i1][j1][0] - rectangles_pos[i0][j0][0]) / movement_frames,
@@ -122,8 +119,23 @@ def draw(steps: list[NPuzzleState]):
 
     root.mainloop()
 
-bidirectional_astar.search(NPuzzleState.start(15), NPuzzleState.goal(15))
+start = NPuzzleState([
+ [7, 15, 2, 13],
+ [6, 10, 12, 9],
+ [11, 3, 14, 8],
+ [4, 0, 1, 5]
+])
 
-input('Aperte enter para visualizar o resultado...')
+goal = NPuzzleState.goal(15)
+
+print('-' * 10 + f' START ' + '-' * 10)
+print(start)
+
+print('-' * 10 + f' GOAL ' + '-' * 10)
+print(goal)
+
+bidirectional_astar.search(start, goal)
+
+print('-' * 10 + f' {len(bidirectional_astar.path)} STEPS ' + '-' * 10)
 
 draw(bidirectional_astar.path)

@@ -13,8 +13,18 @@ from search import *
 #     [6, 7, 8]
 # ])
 
-start = NPuzzleState.start(8)
-goal = NPuzzleState.goal(8)
+# start = NPuzzleState.start(8)
+# goal = NPuzzleState.goal(8)
+
+start = NPuzzleState([
+    [6, 1, 4, 9, 14], 
+    [12, 7, 13, 3, 10], 
+    [0, 16, 8, 5, 24], 
+    [11, 2, 19, 15, 20], 
+    [21, 17, 22, 18, 23]
+])
+
+goal = NPuzzleState.goal(24)
 
 solvers: dict[str, Search] = {
     'BFS': BreadthFirstSearch(),
@@ -32,6 +42,9 @@ print('-' * 10 + f' GOAL ' + '-' * 10)
 print(goal)
 
 for name in solvers:
+    if name != 'BIDIRECTIONAL_ASTAR_H2':
+        continue
+    
     print('-' * 10 + f' {name} ' + '-' * 10)
     
     solver = solvers[name]
@@ -44,6 +57,6 @@ for name in solvers:
     
     print('STEPS:', len(solver.path) - 1)
     print('ELAPSED TIME:', solver.timer)
-    print('MAX MEMORY:', solver.memory)
-    print('EXPANDED:', solver.expanded)
-    print('FACTOR:', solver.expanded / solver.cycles if solver.cycles > 0 else 0)
+    # print('MAX MEMORY:', solver.memory)
+    # print('EXPANDED:', solver.expanded)
+    # print('FACTOR:', solver.expanded / solver.cycles if solver.cycles > 0 else 0)
