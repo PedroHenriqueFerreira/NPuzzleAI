@@ -1,43 +1,49 @@
-from n_puzzle import NPuzzleState
-from solver import Solver
+from game import NPuzzleState
+from search import *
 
-# 10s
 # start = NPuzzleState([
-#     [6, 3, 0],
-#     [7, 8, 5],
-#     [2, 4, 1]
+#     [7, 2, 4],
+#     [5, 0, 6],
+#     [8, 3, 1]
 # ])
 
-# 300s
-# start = NPuzzleState([
-#     [2,  3,  4,  9,  5], 
-#     [17,  7,  8, 14, 10],
-#     [6,  1, 23, 18, 15],
-#     [22, 12, 13, 24, 19],
-#     [11, 16, 21, 0, 20]
+# goal = NPuzzleState([
+#     [0, 1, 2],
+#     [3, 4, 5],
+#     [6, 7, 8]
 # ])
 
-goal = NPuzzleState.goal(7)
-start = goal.random(100)
+start = NPuzzleState.start(8)
+goal = NPuzzleState.goal(8)
 
-path, elapsed_time, max_memory, expand_count, expand_factor = Solver.bidirectional_a_star_search(
-    start, 
-    goal, 
-    NPuzzleState.manhattan_distance
-)
+solvers: dict[str, Search] = {
+    'BFS': BreadthFirstSearch(),
+    'IDS': IterativeDeepeningSearch(),
+    'ASTAR_H1': AStarSearch(NPuzzleState.tiles_out_of_place),
+    'ASTAR_H2': AStarSearch(NPuzzleState.manhattan_distance),
+    'BIDIRECTIONAL_ASTAR_H1': BidirectionalAStarSearch(NPuzzleState.tiles_out_of_place),
+    'BIDIRECTIONAL_ASTAR_H2': BidirectionalAStarSearch(NPuzzleState.manhattan_distance)
+}
 
-# response = Solver.a_star_search(start, goal, NPuzzleState.manhattan_distance)
-# response = Solver.a_star_search(start, goal, NPuzzleState.tiles_out_of_place)
-# response = Solver.iterative_deepening_search(start, goal)
-# response = Solver.deep_limited_search(start, goal, 14)
-# response = Solver.breadth_first_search(start, goal)
+print('-' * 10 + f' START ' + '-' * 10)
+print(start)
 
-for i, item in enumerate(path):
-    print(f'{i}° PASSO')
-    print(item)
+print('-' * 10 + f' GOAL ' + '-' * 10)
+print(goal)
+
+for name in solvers:
+    print('-' * 10 + f' {name} ' + '-' * 10)
     
-print('Steps:', len(path) - 1)
-print('Elapsed time:', elapsed_time)
-print('Max memory:', max_memory)
-print('Expand count:', expand_count)
-print('Expand factor:', expand_factor)
+    solver = solvers[name]
+    
+    solver.search(start, goal)
+    
+    for i, state in enumerate(solver.path):
+        print('-' * 10 + f' {i}° STEP ' + '-' * 10)
+        print(state)
+    
+    print('STEPS:', len(solver.path) - 1)
+    print('ELAPSED TIME:', solver.timer)
+    print('MAX MEMORY:', solver.memory)
+    print('EXPANDED:', solver.expanded)
+    print('FACTOR:', solver.expanded / solver.cycles if solver.cycles > 0 else 0)
