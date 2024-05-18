@@ -8,7 +8,7 @@ class NPuzzleState:
         self.matrix = matrix
         self.parent = parent
         
-        self.size = len(matrix)
+        self.grid = len(matrix)
         
         for i, row in enumerate(matrix):
             if 0 not in row:
@@ -55,7 +55,7 @@ class NPuzzleState:
         return NPuzzleState(matrix, self)
 
     def is_down_possible(self):
-        return self.i != self.size - 1
+        return self.i != self.grid - 1
     
     def down(self):
         matrix = [row[:] for row in self.matrix]
@@ -75,7 +75,7 @@ class NPuzzleState:
         return NPuzzleState(matrix, self)
     
     def is_right_possible(self):
-        return self.j != self.size - 1
+        return self.j != self.grid - 1
     
     def right(self):
         matrix = [row[:] for row in self.matrix]
@@ -85,8 +85,8 @@ class NPuzzleState:
         return NPuzzleState(matrix, self)
 
     def find(self, value: int):
-        for i in range(self.size):
-            for j in range(self.size):
+        for i in range(self.grid):
+            for j in range(self.grid):
                 if value != self.matrix[i][j]:
                     continue
             
@@ -123,17 +123,17 @@ class NPuzzleState:
     
     @staticmethod
     def goal(n: int):
-        size = (n + 1) ** 0.5
+        grid = (n + 1) ** 0.5
         
-        if size != int(size):
+        if grid != int(grid):
             raise ValueError('Invalid n value')
         
-        size = int(size)
+        grid = int(grid)
         
         # Create matrix of size n x n
-        matrix = [[1 + j + i * size for j in range(size)] for i in range(size)]
+        matrix = [[1 + j + i * grid for j in range(grid)] for i in range(grid)]
         # Create empty space
-        matrix[size - 1][size - 1] = 0
+        matrix[grid - 1][grid - 1] = 0
         
         return NPuzzleState(matrix)
 
@@ -153,14 +153,21 @@ class NPuzzleState:
     def manhattan_distance(start: 'NPuzzleState', goal: 'NPuzzleState'):
         distance = 0
         
-        for i1 in range(start.size):
-            for j1 in range(start.size):
-                value = start.matrix[i1][j1]
-                
-                if value == 0:
+        for i1 in range(start.grid):
+            for j1 in range(start.grid):
+                if start.matrix[i1][j1] == 0:
                     continue
                 
-                i2, j2 = goal.find(value)
+                for i2 in range(goal.grid):
+                    should_break = False
+                    
+                    for j2 in range(goal.grid):
+                        if start.matrix[i1][j1] == goal.matrix[i2][j2]:
+                            should_break = True
+                            break
+                
+                    if should_break:
+                        break
                 
                 distance += abs(i1 - i2) + abs(j1 - j2)
         
@@ -170,12 +177,15 @@ class NPuzzleState:
     def tiles_out_of_place(start: 'NPuzzleState', goal: 'NPuzzleState'):
         counter = 0
         
-        for i in range(start.size):
-            for j in range(start.size):
-                if start.matrix[i][j] != goal.matrix[i][j]:
-                    if start.matrix[i][j] == 0:
-                        continue
-                    
-                    counter += 1
+        for i in range(start.grid):
+            for j in range(start.grid):
+                if start.matrix[i][j] == 0:
+                    continue
+                
+                if start.matrix[i][j] == goal.matrix[i][j]:
+                    continue
+                
+                counter += 1
+                
 
         return counter

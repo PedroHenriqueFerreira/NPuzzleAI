@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable
 from queue import PriorityQueue, Queue, LifoQueue
 from time import time
 
@@ -11,7 +11,8 @@ class Search:
         self.memory = 0
         self.expanded = 0
         self.cycles = 0
-        self.path: Optional[list[NPuzzleState]] = None
+        
+        self.path: list[NPuzzleState] = []
 
     def clear(self):
         self.timer = time()
@@ -19,7 +20,8 @@ class Search:
         self.memory = 0
         self.expanded = 0
         self.cycles = 0
-        self.path = None
+        
+        self.path.clear()
         
     def update_timer(self):
         self.timer = time() - self.timer
@@ -33,8 +35,9 @@ class Search:
     def update_cycles(self):
         self.cycles += 1
         
-    def update_path(self, path: list[NPuzzleState]):
-        self.path = path
+    def update_path(self, *paths: list[NPuzzleState]):
+        for path in paths:
+            self.path.extend(path)
 
     def search(self, start: NPuzzleState, goal: NPuzzleState):
         raise NotImplementedError()
@@ -46,13 +49,13 @@ class BreadthFirstSearch(Search):
         queue: Queue[NPuzzleState] = Queue()
         queue.put(start)
         
-        closedSet: set[NPuzzleState] = set()
+        closed_set: set[NPuzzleState] = set()
         
         while not queue.empty():
             self.update_memory(queue)
             
             current = queue.get()
-            closedSet.add(current)
+            closed_set.add(current)
             
             if current == goal:
                 break
@@ -60,7 +63,7 @@ class BreadthFirstSearch(Search):
             self.update_cycles()
 
             for neighbor in current.expand():
-                if neighbor not in closedSet:
+                if neighbor not in closed_set:
                     self.update_expanded()
                     
                     queue.put(neighbor)
@@ -76,7 +79,7 @@ class IterativeDeepeningSearch(Search):
         depth = 0
         
         while True:
-            # print(f'MAX_DEPTH: {depth}')
+            print(f'DEPTH: {depth}')
             
             stack: LifoQueue[tuple[int, NPuzzleState]] = LifoQueue()
             stack.put((depth, start))
@@ -125,16 +128,16 @@ class AStarSearch(Search):
     def search(self, start, goal):
         self.clear()
         
-        priority_queue: PriorityQueue[tuple[int, NPuzzleState]] = PriorityQueue()
-        priority_queue.put((0, start))
+        priority_queue: PriorityQueue[tuple[int, int, NPuzzleState]] = PriorityQueue()
+        priority_queue.put((0, 0, start))
         
         g_score = { start: 0 }
         
         while not priority_queue.empty():
             self.update_memory(priority_queue)
             
-            f_score, current = priority_queue.get()
-        
+            _, _, current = priority_queue.get()
+            
             if current == goal:
                 break
         
@@ -146,7 +149,9 @@ class AStarSearch(Search):
                 if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
                     self.update_expanded()
                 
-                    priority_queue.put((tentative_g_score + self.h(neighbor, goal), neighbor))
+                    h_score = self.h(neighbor, goal)
+                
+                    priority_queue.put((tentative_g_score + h_score, h_score, neighbor))
                     
                     g_score[neighbor] = tentative_g_score
              
@@ -154,7 +159,7 @@ class AStarSearch(Search):
         
         self.update_timer()
 
-class BidirectionalAStarSearch(Search):
+class BidirectionalAStarSearch(Search):  
     def __init__(self, h: Callable[[NPuzzleState, NPuzzleState], int]):
         super().__init__()
         
@@ -163,64 +168,75 @@ class BidirectionalAStarSearch(Search):
     def search(self, start: NPuzzleState, goal: NPuzzleState):
         self.clear()
         
-        start_priority_queue: PriorityQueue[tuple[int, NPuzzleState]] = PriorityQueue()
-        start_priority_queue.put((0, start))
+        start_priority_queue: PriorityQueue[tuple[int, int, NPuzzleState]] = PriorityQueue()
+        start_priority_queue.put((0, 0, start))
         
-        goal_priority_queue: PriorityQueue[tuple[int, NPuzzleState]] = PriorityQueue()
-        goal_priority_queue.put((0, goal))
+        goal_priority_queue: PriorityQueue[tuple[int, int, NPuzzleState]] = PriorityQueue()
+        goal_priority_queue.put((0, 0, goal))
+        
+        start_closed_set: set[NPuzzleState] = set()
+        goal_closed_set: set[NPuzzleState] = set()
         
         start_g_score = { start: 0 }
         goal_g_score = { goal: 0 }
         
-        start_target = goal
-        goal_target = start
-        
-        while not start_priority_queue.empty() or not goal_priority_queue.empty():
+        while not start_priority_queue.empty() and not goal_priority_queue.empty():
             self.update_memory(start_priority_queue, goal_priority_queue)
             
-            start_current = None
-            goal_current = None
+            _, _, start_current = start_priority_queue.get()
+            start_closed_set.add(start_current)
             
-            if not start_priority_queue.empty():
-                start_f_score, start_current = start_priority_queue.get()
-                
-            if not goal_priority_queue.empty(): 
-                goal_f_score, goal_current = goal_priority_queue.get()
+            _, _, goal_current = goal_priority_queue.get()
+            goal_closed_set.add(goal_current)
         
             if start_current == goal_current:
                 break
-
-            start_target = goal_current
-            goal_target = start_current
             
+            if start_current in goal_closed_set:
+                for goal_closed_item in goal_closed_set:
+                    if start_current == goal_closed_item:
+                        goal_current = goal_closed_item
+                        break
+                    
+                break
+
+            if goal_current in start_closed_set:
+                for start_closed_item in start_closed_set:
+                    if goal_current == start_closed_item:
+                        start_current = start_closed_item
+                        break
+                    
+                break
+
             for current in [start_current, goal_current]:
-                if current is None:
-                    continue
-                
                 if current == start_current:
                     g_score = start_g_score
-                    open_list = start_priority_queue
-                    target = start_target
+                    priority_queue = start_priority_queue
+                    target = goal
                 else:  
                     g_score = goal_g_score
-                    open_list = goal_priority_queue
-                    target = goal_target
-                    
+                    priority_queue = goal_priority_queue
+                    target = start
+                
                 tentative_g_score = g_score[current] + 1
                 
                 self.update_cycles()
                 
                 for neighbor in current.expand():
                     if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                        
                         self.update_expanded()
                     
-                        open_list.put((tentative_g_score + self.h(neighbor, target), neighbor))
+                        h_score = self.h(neighbor, target)
+                    
+                        priority_queue.put((tentative_g_score + h_score, h_score, neighbor))
                         
                         g_score[neighbor] = tentative_g_score
 
         start_path = start_current.path()
         goal_path = goal_current.path()
         
-        self.update_path(start_path[:-1] + goal_path[::-1])
+        self.update_path(start_path[:-1], goal_path[::-1])
 
         self.update_timer()
+        
