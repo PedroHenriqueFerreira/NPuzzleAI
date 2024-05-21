@@ -8,7 +8,7 @@ class State:
         self.parent = parent # Estado pai
     
     def __lt__(self, other: 'State'):
-        ''' Método de comparação de estados. '''
+        ''' Método de comparação de estados. (Apenas para ordenação em fila de prioridade). '''
         
         return True
 
@@ -18,7 +18,7 @@ class State:
         raise NotImplementedError()
 
     def path(self):
-        ''' Retorna o caminho do estado até o estado inicial. '''
+        ''' Retorna o caminho do estado atual até o estado inicial. '''
         
         current = self
         path = [current]
@@ -49,11 +49,6 @@ class NPuzzleState(State):
             
             break
 
-    def flatten(self):
-        ''' Retorna o estado em uma lista unidimensional. '''
-        
-        return ''.join(str(item) for row in self.matrix for item in row)
-
     def __str__(self):
         ''' Retorna a representação do estado em string. '''
         
@@ -78,7 +73,7 @@ class NPuzzleState(State):
             return False
         
         return self.matrix == other.matrix
-        
+    
     def __ne__(self, other: Optional['NPuzzleState']):
         ''' Método de comparação da diferença de estados. '''
         
@@ -164,19 +159,19 @@ class NPuzzleState(State):
         grid = (n + 1) ** 0.5
         
         if grid != int(grid):
-            raise ValueError('Invalid n value')
+            raise ValueError('Valor de N inválido.')
         
         grid = int(grid)
         
-        # Create matrix of size n x n
+        # Cria a matriz do estado objetivo
         matrix = [[1 + j + i * grid for j in range(grid)] for i in range(grid)]
-        # Create empty space
+        # Criando o espaço vazio
         matrix[grid - 1][grid - 1] = 0
         
         return NPuzzleState(matrix)
 
     @staticmethod
-    def start(n: int, steps: int = 1000):
+    def start(n: int, steps: int = 100):
         ''' Retorna um estado inicial aleatório de um n-puzzle. '''
         
         state = NPuzzleState.goal(n)
@@ -191,7 +186,7 @@ class NPuzzleState(State):
                 states.append(neighbor)
             
             if not states:
-                print(f'No more states to expand ({i} steps)')
+                print(f'Embaralhamento interrompido em {i} passos')
                 break
             
             state = choice(states)
@@ -239,6 +234,5 @@ class NPuzzleState(State):
                     continue
                 
                 counter += 1
-                
 
         return counter

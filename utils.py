@@ -20,13 +20,7 @@ BLOCK_COLOR = '#FFF'
 
 BORDER_SIZE = 2
 
-TEXT_SIZE = 50
-
-def write_file(file: str, content: str):
-    ''' Escreve o conteúdo no arquivo. '''
-    
-    with open(file, 'a') as f:
-        f.write(content)
+TEXT_SIZE = 30
 
 def draw(steps: list[NPuzzleState]):
     ''' Desenha o n-puzzle. '''
@@ -101,7 +95,7 @@ def draw(steps: list[NPuzzleState]):
         # xx = x + canvas.winfo_width()
         # yy = y + canvas.winfo_height()
         
-        # flatten = ''.join(item for row in start.matrix for item in row)
+        # flatten = ' '.join(item for row in start.matrix for item in row)
         
         # if not exists('images'): makedirs('images')
         # ImageGrab.grab(bbox=(x, y, xx, yy)).save(f'images/{flatten}_{algorithm}_{step}.png')

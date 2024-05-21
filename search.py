@@ -51,6 +51,9 @@ class Search:
         if structures:
             self.memory = max(self.memory, sum(structure.size() for structure in structures))
         else:
+            if self.structure is None:
+                return
+            
             self.memory = max(self.memory, self.structure.size())
 
     def update_expanded(self, *values: int):
@@ -127,7 +130,7 @@ class BreadthFirstSearch(Search):
                     
                     self.structure.put(neighbor)
                     self.closed_set.add(neighbor)
-              
+
         self.update_timer()
         self.update_done()
 
