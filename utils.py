@@ -101,7 +101,8 @@ def draw(steps: list[NPuzzleState]):
         # ImageGrab.grab(bbox=(x, y, xx, yy)).save(f'images/{flatten}_{algorithm}_{step}.png')
         
         if step == len(steps) - 1:
-            return canvas.after(INITIALIZE_TIME, root.destroy)
+            return
+            # return canvas.after(INITIALIZE_TIME, root.destroy)
         
         curr = steps[step]
         next = steps[step + 1]

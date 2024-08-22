@@ -9,24 +9,25 @@ from tkinter import Tk, Canvas
 from state import State
 from search import *
 
-BG_COLOR = '#333'
+BG_COLOR = '#333333'
     
-BOX_SIZE = 800
-NODE_SIZE = 2
+BOX_SIZE = 1000
+NODE_SIZE = 6
+BIG_NODE_SIZE = 10
 
-NODE_COLOR = '#666'
+NODE_COLOR = '#666666'
 
-LINE_SIZE = 1
-LINE_COLOR = '#444'
+LINE_SIZE = 3
+LINE_COLOR = '#444444'
 
-NODE_START_COLOR = '#F08'
-NODE_GOAL_COLOR = '#0FA'
-PATH_COLOR = '#0EF'
+NODE_START_COLOR = '#FF00AA'
+NODE_GOAL_COLOR = '#FFAA00'
+PATH_COLOR = '#00FFAA'
 
 FPS = 60
-INTERVAL_TIME = 2000
+INTERVAL_TIME = 0
 
-DELAY = 0.1
+DELAY = 0.2
 
 class Coord(State):
     def __init__(
@@ -155,9 +156,12 @@ class Map:
         )
         canvas.pack()
         
+        div_x = (map.max.x - map.min.x)
+        div_y = (map.max.y - map.min.y)
+        
         for coord in map.graph:
-            x = (coord.x - map.min.x) / (map.max.x - map.min.x) * BOX_SIZE
-            y = (coord.y - map.min.y) / (map.max.y - map.min.y) * BOX_SIZE
+            x = (coord.x - map.min.x) * BOX_SIZE / div_x
+            y = (coord.y - map.min.y) * BOX_SIZE / div_y
             
             ovals[coord] = canvas.create_oval(
                 x - NODE_SIZE / 2, 
@@ -169,8 +173,8 @@ class Map:
             )
         
             for neighbor in map.graph[coord]:
-                nx = (neighbor.x - map.min.x) / (map.max.x - map.min.x) * BOX_SIZE
-                ny = (neighbor.y - map.min.y) / (map.max.y - map.min.y) * BOX_SIZE
+                nx = (neighbor.x - map.min.x) * BOX_SIZE / div_x
+                ny = (neighbor.y - map.min.y) * BOX_SIZE / div_y
                 
                 line = canvas.create_line(
                     x, 
@@ -206,7 +210,7 @@ class Map:
                         canvas.itemconfig(lines[(item, neighbor)], fill=PATH_COLOR)
                         canvas.tag_raise(lines[(item, neighbor)])
                 
-                return canvas.after(INTERVAL_TIME, root.destroy)
+                return # canvas.after(INTERVAL_TIME, root.destroy)
 
             if isinstance(solver, BidirectionalAStarSearch):
                 forward_closed_set = list(solver.forward.g_score.keys())
@@ -249,14 +253,15 @@ if __name__ == '__main__':
     
     solver = BidirectionalAStarSearch(Coord.distance)
     
+    nodes = list(map.graph.keys())
+    
+    # start = nodes[0]
+    # goal = nodes[-1]
+    
     start = choice(list(map.graph.keys()))
     goal = choice(list(map.graph.keys()))
     
-    t = Thread(target=solver.search, args=(start, goal))
-    
-    t.start()
+    Thread(target=solver.search, args=(start, goal)).start()
     
     map.draw(solver)
-    
-    t.join()
     
